@@ -1,0 +1,1408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<!-- Optimized Viewport for Mobile Devices (prevents auto-zoom, supports safe areas) -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Super Minds Vocabulary Challenge (Mobile) - SJKC Nan Hwa</title>
+<!-- Google Fonts: Shantell Sans & Plus Jakarta Sans -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800;900&family=Shantell+Sans:ital,wght@0,500;0,700;0,800;1,600&display=swap" rel="stylesheet">
+<!-- html2pdf.js for 1-click automatic high-res PDF generation -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+<style>
+  :root {
+    --font-hand: 'Shantell Sans', cursive, sans-serif;
+    --font-ui: 'Plus Jakarta Sans', sans-serif;
+    --primary-blue: #0d47a1;
+    --stage-pill-bg: #1565c0;
+    --border-dark: #1a1a1a;
+    --bg-quad-1: #fff59d;
+    --bg-quad-2: #e1bee7;
+    --bg-quad-3: #c8e6c9;
+    --bg-quad-4: #ffe0b2;
+    --scale-factor: 1;
+    --outline-width: 2.5px;
+  }
+
+  /* High Myopia / Low-Vision Accessibility Theme for Phone */
+  body.high-myopia-mode {
+    --scale-factor: 1.15;
+    --outline-width: 4px;
+    --border-dark: #000000;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    font-family: var(--font-hand);
+  }
+
+  html, body {
+    width: 100%;
+    height: 100%;
+    height: 100dvh; /* Dynamic mobile viewport */
+    background-color: #12161a;
+    color: #1a1a1a;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* TOP HUD - MOBILE OPTIMIZED COMPACT BAR */
+  #hud {
+    height: calc(56px * var(--scale-factor));
+    background: #1e252b;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 10px;
+    padding-top: env(safe-area-inset-top, 0px);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+    z-index: 100;
+    border-bottom: var(--outline-width) solid #37474f;
+    flex-shrink: 0;
+  }
+
+  .hud-left, .hud-center, .hud-right {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .stage-badge {
+    background: var(--stage-pill-bg);
+    color: #ffffff;
+    border: var(--outline-width) solid #64b5f6;
+    padding: 4px 8px;
+    border-radius: 20px;
+    font-size: calc(11px * var(--scale-factor));
+    font-weight: 800;
+    font-family: var(--font-ui);
+    white-space: nowrap;
+  }
+
+  .progress-box {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    width: calc(85px * var(--scale-factor));
+  }
+
+  .progress-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: calc(9px * var(--scale-factor));
+    font-family: var(--font-ui);
+    color: #b0bec5;
+    font-weight: 800;
+  }
+
+  .progress-track {
+    width: 100%;
+    height: calc(8px * var(--scale-factor));
+    background: #37474f;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid #546e7a;
+  }
+
+  .progress-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #43a047, #00e676);
+    transition: width 0.3s ease;
+  }
+
+  .hud-btn {
+    background: #2c3840;
+    border: var(--outline-width) solid #607d8b;
+    color: #ffffff;
+    padding: calc(5px * var(--scale-factor)) calc(8px * var(--scale-factor));
+    border-radius: 16px;
+    font-size: calc(10.5px * var(--scale-factor));
+    font-weight: 800;
+    cursor: pointer;
+    font-family: var(--font-ui);
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    white-space: nowrap;
+  }
+
+  .hud-btn:active {
+    transform: scale(0.94);
+  }
+
+  .score-badge {
+    font-size: calc(13px * var(--scale-factor));
+    font-weight: 900;
+    color: #ffd54f;
+    font-family: var(--font-ui);
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    padding: 0 4px;
+    white-space: nowrap;
+  }
+
+  /* WORKSPACE CONTAINER */
+  #game-area {
+    flex: 1;
+    position: relative;
+    width: 100%;
+    height: calc(100dvh - 56px);
+    overflow: hidden;
+    background: #81d4fa;
+  }
+
+  /* PRELOADER SCREEN */
+  #preloader {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: #182026;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    z-index: 500;
+    padding: 20px;
+    text-align: center;
+    transition: opacity 0.4s;
+  }
+
+  .loader-ring {
+    width: 48px;
+    height: 48px;
+    border: 5px solid #37474f;
+    border-top-color: #ffd54f;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin { 100% { transform: rotate(360deg); } }
+
+  /* FEEDBACK STAMPS */
+  .feedback-stamp {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: calc(75px * var(--scale-factor));
+    z-index: 90;
+    pointer-events: none;
+    opacity: 0;
+    transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+  .stamp-correct { left: 16px; }
+  .stamp-wrong { right: 16px; }
+  .stamp-active { opacity: 1; transform: translateY(-50%) scale(1.15); }
+
+  /* FULL-BLEED YET FULL-VIEW IMAGE DIRECTIVE */
+  .game-vocab-img {
+    width: 100%;
+    height: 100%;
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    pointer-events: none;
+    filter: drop-shadow(0 4px 12px rgba(0,0,0,0.22));
+    display: block;
+    margin: auto;
+  }
+
+  /* =================================================================
+     STAGES A & B: FULL-BLEED 4 QUADRANTS (MOBILE 2X2)
+  ================================================================= */
+  #quad-screen {
+    width: 100%;
+    height: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    position: relative;
+  }
+
+  .quad {
+    position: relative;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border: var(--outline-width) solid var(--border-dark);
+    padding: 8px;
+  }
+
+  .quad:active { filter: brightness(0.92); }
+  .quad-1 { background-color: var(--bg-quad-1); }
+  .quad-2 { background-color: var(--bg-quad-2); }
+  .quad-3 { background-color: var(--bg-quad-3); }
+  .quad-4 { background-color: var(--bg-quad-4); }
+
+  .quad-img-box {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* TOUCH-OPTIMIZED CENTER PILL */
+  #center-pill {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #ffffff;
+    border: calc(3.5px * var(--scale-factor)) solid var(--border-dark);
+    padding: calc(10px * var(--scale-factor)) calc(22px * var(--scale-factor));
+    border-radius: 40px;
+    font-size: calc(20px * var(--scale-factor));
+    font-weight: 800;
+    color: #1a1a1a;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.35);
+    z-index: 60;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    max-width: 82vw;
+    white-space: nowrap;
+    transition: transform 0.15s ease, background 0.15s;
+  }
+
+  #center-pill.is-clickable {
+    cursor: pointer;
+    pointer-events: auto;
+  }
+
+  #center-pill.is-clickable:active {
+    transform: translate(-50%, -50%) scale(0.92);
+    background: #fff9c4;
+  }
+
+  #center-pill.is-static {
+    cursor: default;
+    pointer-events: none;
+  }
+
+  .pill-pulse-anim {
+    animation: pillPulse 1.8s infinite;
+  }
+
+  @keyframes pillPulse {
+    0% { box-shadow: 0 0 0 0 rgba(255, 213, 79, 0.7); }
+    70% { box-shadow: 0 0 0 14px rgba(255, 213, 79, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(255, 213, 79, 0); }
+  }
+
+  /* =================================================================
+     STAGE C: SPELL-IT-RIGHT (RESPONSIVE PHONE LAYOUT)
+  ================================================================= */
+  #scramble-screen {
+    width: 100%;
+    height: 100%;
+    background: #e0f7fa;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 10px calc(16px + env(safe-area-inset-bottom, 0px)) 10px;
+  }
+
+  .scramble-hero-box {
+    width: 100%;
+    height: 38dvh;
+    max-height: 260px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px;
+  }
+
+  /* Responsive slots wrap dynamically for 10-letter words like sandcastle */
+  .slots-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+    justify-content: center;
+    max-width: 96vw;
+    padding: 4px;
+  }
+
+  .slot-circle {
+    width: clamp(34px, 8.5vw, 48px);
+    height: clamp(34px, 8.5vw, 48px);
+    border-radius: 50%;
+    border: calc(2.5px * var(--scale-factor)) solid #006064;
+    background: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: clamp(18px, 5.5vw, 24px);
+    font-weight: 900;
+    color: #006064;
+    cursor: pointer;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.15);
+  }
+
+  .bubbles-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    max-width: 96vw;
+    justify-content: center;
+    padding-bottom: 6px;
+  }
+
+  .bubble-btn {
+    width: clamp(42px, 12vw, 56px);
+    height: clamp(42px, 12vw, 56px);
+    border-radius: 50%;
+    background: #ffffff;
+    border: calc(2.5px * var(--scale-factor)) solid var(--border-dark);
+    color: #1a1a1a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: clamp(20px, 6vw, 26px);
+    font-weight: 900;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.18);
+    transition: transform 0.1s;
+  }
+
+  .bubble-btn:active {
+    transform: scale(0.9);
+    background: #fff9c4;
+  }
+
+  .bubble-btn.used {
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  /* =================================================================
+     STAGE D: CHOOSE THE RIGHT WORD (MOBILE REPLICA)
+  ================================================================= */
+  #choice-screen {
+    width: 100%;
+    height: 100%;
+    background: #80deea;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px calc(14px + env(safe-area-inset-bottom, 0px)) 14px;
+  }
+
+  .choice-hero-box {
+    width: 100%;
+    height: 38dvh;
+    max-height: 250px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px;
+  }
+
+  .choice-options-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+    max-width: 330px;
+  }
+
+  .stacked-word-btn {
+    background: #ffffff;
+    border: calc(2.5px * var(--scale-factor)) solid var(--border-dark);
+    color: #212121;
+    font-size: calc(21px * var(--scale-factor));
+    font-weight: 900;
+    padding: 10px 14px;
+    min-height: 48px;
+    border-radius: 16px;
+    cursor: pointer;
+    text-align: center;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.16);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.1s;
+  }
+
+  .stacked-word-btn:active {
+    transform: scale(0.96);
+    background: #fff59d;
+    color: #b71c1c;
+  }
+
+  /* MODALS FOR PHONE */
+  .modal-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100vw; height: 100%; height: 100dvh;
+    background: rgba(0,0,0,0.88);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 14px;
+    overflow-y: auto;
+  }
+
+  .modal-card {
+    background: #ffffff;
+    border-radius: 20px;
+    padding: 22px 16px;
+    max-width: 440px;
+    width: 100%;
+    text-align: center;
+    border: var(--outline-width) solid #000;
+    box-shadow: 0 16px 36px rgba(0,0,0,0.5);
+  }
+
+  .roster-grid {
+    display: grid;
+    grid-template-columns: 1fr; /* Single column on mobile for easy tap */
+    gap: 8px;
+    max-height: 52dvh;
+    overflow-y: auto;
+    margin: 14px 0;
+    padding: 4px;
+  }
+
+  .roster-btn {
+    background: #e3f2fd;
+    border: 2px solid #1976d2;
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 13.5px;
+    font-weight: 800;
+    color: #0d47a1;
+    cursor: pointer;
+    text-align: left;
+    font-family: var(--font-ui);
+    min-height: 44px;
+  }
+
+  .roster-btn:active {
+    background: #1976d2;
+    color: #fff;
+  }
+
+  /* MOBILE-ADAPTIVE PROFESSIONAL CERTIFICATE */
+  .cert-sheet {
+    background: #fffefb;
+    width: 100%;
+    max-width: 650px;
+    padding: 24px 18px;
+    border: 10px solid #8d6e15;
+    border-image: linear-gradient(135deg, #7c5a00, #e6b800, #966f00, #ffe066, #7c5a00) 10;
+    position: relative;
+    box-shadow: 0 12px 35px rgba(0,0,0,0.5);
+    color: #1a1a1a;
+    text-align: center;
+    box-sizing: border-box;
+  }
+
+  .cert-watermark {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%) rotate(-12deg);
+    font-size: clamp(48px, 12vw, 80px);
+    color: rgba(184, 134, 11, 0.06);
+    font-weight: 900;
+    font-family: 'Times New Roman', serif;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+
+  .cert-school-header {
+    font-family: 'Times New Roman', serif;
+    font-size: clamp(20px, 5.5vw, 28px);
+    font-weight: 900;
+    color: #1a1a1a;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+  }
+
+  .cert-ornament-line {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin: 4px 0 8px 0;
+  }
+
+  .gold-rule {
+    width: 45px;
+    height: 2px;
+    background: #b8860b;
+  }
+
+  .cert-title {
+    font-family: 'Times New Roman', serif;
+    font-size: clamp(16px, 4vw, 22px);
+    color: #8d6e15;
+    font-weight: 800;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+
+  .cert-student-box {
+    margin: 10px 0 8px 0;
+  }
+
+  .cert-student-name {
+    font-family: 'Times New Roman', serif;
+    font-size: clamp(18px, 5vw, 26px);
+    font-weight: 900;
+    color: #0d47a1;
+    border-bottom: 2px solid #b8860b;
+    display: inline-block;
+    padding: 2px 14px;
+    text-transform: uppercase;
+    word-break: break-word;
+  }
+
+  .cert-class-tag {
+    font-size: 13px;
+    font-weight: 800;
+    color: #455a64;
+    margin-top: 3px;
+    font-family: var(--font-ui);
+  }
+
+  .cert-main-text {
+    font-family: 'Georgia', serif;
+    font-size: clamp(12px, 3.2vw, 14px);
+    line-height: 1.5;
+    color: #37474f;
+    margin: 8px auto;
+  }
+
+  /* 2x2 grid on mobile screens for readability */
+  .cert-meta-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    margin: 12px 0 0 0;
+    padding: 8px;
+    background: #fbf8f0;
+    border: 1px solid #e0d7c2;
+    border-radius: 8px;
+    font-family: var(--font-ui);
+  }
+
+  .cert-meta-cell strong {
+    display: block;
+    font-size: 9.5px;
+    color: #8d6e15;
+    text-transform: uppercase;
+    margin-bottom: 1px;
+  }
+
+  .cert-meta-cell span {
+    font-size: 11px;
+    font-weight: 800;
+    color: #1a1a1a;
+  }
+
+  .modal-action-bar {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+    max-width: 320px;
+    margin-top: 12px;
+  }
+</style>
+</head>
+<body>
+
+<!-- TOP COMPACT HUD -->
+<header id="hud">
+  <div class="hud-left">
+    <div class="stage-badge" id="hud-stage-label">Stage A</div>
+    <div class="progress-box">
+      <div class="progress-labels">
+        <span>PROG</span>
+        <span id="hud-progress-pct">0%</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" id="hud-progress-bar"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="hud-center">
+    <button class="hud-btn" id="btn-toggle-myopia" style="background:#00695c; border-color:#26a69a;" onclick="toggleHighMyopia()">
+      👁️ Myopia
+    </button>
+  </div>
+
+  <div class="hud-right">
+    <button class="hud-btn" style="background:#bf360c; border-color:#ff7043;" onclick="openPasscodeModal()">
+      ⚡ Fast
+    </button>
+    <div class="score-badge">
+      <span>⭐</span>
+      <span id="hud-score">0/0</span>
+    </div>
+  </div>
+</header>
+
+<!-- MAIN STAGE -->
+<main id="game-area">
+  <!-- Asset Preloader with Audio Unlock Tap -->
+  <div id="preloader" onclick="unlockMobileAudio()">
+    <div class="loader-ring"></div>
+    <p style="font-size:18px; font-weight:800;">Tap Anywhere to Start!</p>
+    <p style="font-size:12px; color:#90a4ae; font-family:var(--font-ui);">Super Minds (Units 1–9) • SJKC Nan Hwa</p>
+  </div>
+
+  <!-- Feedback Stamps -->
+  <div class="feedback-stamp stamp-correct" id="stamp-correct">👍</div>
+  <div class="feedback-stamp stamp-wrong" id="stamp-wrong">👎</div>
+
+  <!-- STAGES A & B (FULL-BLEED 4-QUADRANT) -->
+  <section id="quad-screen">
+    <div class="quad quad-1" onclick="onQuadrantChosen(0)"><div class="quad-img-box" id="quad-box-0"></div></div>
+    <div class="quad quad-2" onclick="onQuadrantChosen(1)"><div class="quad-img-box" id="quad-box-1"></div></div>
+    <div class="quad quad-3" onclick="onQuadrantChosen(2)"><div class="quad-img-box" id="quad-box-2"></div></div>
+    <div class="quad quad-4" onclick="onQuadrantChosen(3)"><div class="quad-img-box" id="quad-box-3"></div></div>
+    
+    <!-- CENTER PILL BUTTON (TOUCH-FRIENDLY) -->
+    <button id="center-pill" onclick="triggerAudioReplay()">
+      <span>Listen...</span>
+    </button>
+  </section>
+
+  <!-- STAGE C (Spell-it-right with Dynamic Wrapped Slots) -->
+  <section id="scramble-screen">
+    <div class="scramble-hero-box" id="scramble-art-box"></div>
+    <div class="slots-wrap" id="scramble-slots-row"></div>
+    <div class="bubbles-wrap" id="scramble-bubbles-row"></div>
+  </section>
+
+  <!-- STAGE D (Choose the right word) -->
+  <section id="choice-screen">
+    <div class="choice-hero-box" id="choice-art-box"></div>
+    <div class="choice-options-list" id="choice-options-box"></div>
+  </section>
+</main>
+
+<!-- PASSCODE MODAL -->
+<div class="modal-overlay" id="passcode-modal">
+  <div class="modal-card">
+    <h3 style="font-size:22px; color:#c62828;">🔒 Fast-Track Access</h3>
+    <p style="font-size:13px; color:#546e7a; margin-top:6px; font-family:var(--font-ui);">
+      Enter passcode to verify teacher bypass credentials:
+    </p>
+    <input type="password" id="passcode-input" placeholder="Enter Passcode" style="width:90%; padding:10px; font-size:18px; font-family:var(--font-ui); font-weight:800; text-align:center; margin:16px 0; border:2.5px solid #1565c0; border-radius:12px;">
+    <div style="display:flex; justify-content:center; gap:10px;">
+      <button class="hud-btn" style="background:#2e7d32; font-size:13px; padding:8px 16px;" onclick="verifyPasscode()">Verify</button>
+      <button class="hud-btn" style="font-size:13px; padding:8px 16px;" onclick="hideModal('passcode-modal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- STUDENT ROSTER MODAL (KELAS 2M) -->
+<div class="modal-overlay" id="roster-modal">
+  <div class="modal-card">
+    <h2 style="font-size:22px; color:#0d47a1;">🎓 Challenge Completed!</h2>
+    <p style="font-size:13px; color:#546e7a; margin-top:4px; font-family:var(--font-ui);">
+      Tap your name (Kelas 2M) to view and download your certificate:
+    </p>
+    <div class="roster-grid" id="roster-grid"></div>
+  </div>
+</div>
+
+<!-- CERTIFICATE VIEW & AUTO PDF DOWNLOAD -->
+<div class="modal-overlay" id="cert-modal">
+  <div style="display:flex; flex-direction:column; align-items:center; width:100%; max-width:650px;">
+    
+    <!-- THE CERTIFICATE ITSELF (EXCLUSIVELY CAPTURED BY HTML2PDF) -->
+    <div class="cert-sheet" id="printable-certificate">
+      <div class="cert-watermark">SJKC NAN HWA</div>
+      <div class="cert-school-header">SJKC NAN HWA</div>
+      
+      <div class="cert-ornament-line">
+        <div class="gold-rule"></div>
+        <div style="font-size:18px;">🏛</div>
+        <div class="gold-rule"></div>
+      </div>
+
+      <div class="cert-title">Interactive English Vocabulary Mastery Challenge</div>
+      <p style="font-size:12px; color:#6d4c41; margin-top:3px; font-family:Georgia, serif;">This certificate is proudly awarded to</p>
+
+      <div class="cert-student-box">
+        <div class="cert-student-name" id="cert-student-name">STUDENT NAME</div>
+        <div class="cert-class-tag">Class: Kelas 2M</div>
+      </div>
+
+      <div class="cert-main-text">
+        for demonstrating outstanding linguistic competence, phonological listening comprehension, and orthographic spelling accuracy in the <strong>Super Minds Curriculum (Units 1–9)</strong>.
+      </div>
+
+      <div class="cert-meta-grid">
+        <div class="cert-meta-cell">
+          <strong>COMPLETION DATE</strong>
+          <span id="cert-date-val">--</span>
+        </div>
+        <div class="cert-meta-cell">
+          <strong>SESSION START</strong>
+          <span id="cert-start-val">--</span>
+        </div>
+        <div class="cert-meta-cell">
+          <strong>SESSION END</strong>
+          <span id="cert-end-val">--</span>
+        </div>
+        <div class="cert-meta-cell">
+          <strong>TOTAL DURATION</strong>
+          <span id="cert-duration-val">--</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ACTION BUTTONS LOCATED OUTSIDE THE CERTIFICATE -->
+    <div class="modal-action-bar">
+      <button class="hud-btn" style="background:#0d47a1; font-size:14px; padding:12px; justify-content:center; border-radius:12px;" onclick="downloadCertificatePDF()">
+        📥 Download Certificate (PDF)
+      </button>
+      <button class="hud-btn" style="background:#546e7a; font-size:14px; padding:10px; justify-content:center; border-radius:12px;" onclick="hideModal('cert-modal')">
+        Close
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+/* =====================================================================
+   HOSTED IMAGE URL MAP (60 ITEMS)
+===================================================================== */
+const IMAGE_MAP = {
+  apple: "https://i.postimg.cc/Kj02fwQT/apple.avif",
+  bag: "https://i.postimg.cc/tJBjkwDP/bag.webp",
+  ball: "https://i.postimg.cc/T1t60FQg/ball.jpg",
+  banana: "https://i.postimg.cc/QC8Dphg1/banana.webp",
+  bedroom: "https://i.postimg.cc/mgtbXLvc/bedroom.jpg",
+  bike: "https://i.postimg.cc/J0pLxvKk/bike.jpg",
+  boat: "https://i.postimg.cc/C1HYBzqN/boat.jpg",
+  book: "https://i.postimg.cc/T1t60FQQ/book.jpg",
+  broccoli: "https://i.postimg.cc/FKShvPsv/broccoli.webp",
+  cake: "https://i.postimg.cc/Y0r71MNg/cake.jpg",
+  camel: "https://i.postimg.cc/CxzFPh3C/camel.webp",
+  cap: "https://i.postimg.cc/MH6wyq08/cap.avif",
+  car: "https://i.postimg.cc/2y0DGMTP/car.webp",
+  carrot: "https://i.postimg.cc/526x74hp/carrot.webp",
+  cat: "https://i.postimg.cc/Kj02fwQP/cat.webp",
+  cellar: "https://i.postimg.cc/CxXwWyYY/cellar.jpg",
+  cheese: "https://i.postimg.cc/K8RZqG69/cheese.jpg",
+  chicken: "https://i.postimg.cc/GmHc7LWD/chicken.jpg",
+  desk: "https://i.postimg.cc/Hn6gzR39/desk.webp",
+  dog: "https://i.postimg.cc/GtXCKVzf/dog.webp",
+  doll: "https://i.postimg.cc/mkL4QB33/doll.jpg",
+  duck: "https://i.postimg.cc/gjgWsQ41/duck.jpg",
+  elephant: "https://i.postimg.cc/MH6wyq0Y/elephant.jpg",
+  fish: "https://i.postimg.cc/FRgmd7Lp/fish.webp",
+  foot: "https://i.postimg.cc/wMqzhg57/foot.jpg",
+  frog: "https://i.postimg.cc/J0pLxvKx/frog.webp",
+  hand: "https://i.postimg.cc/nzYZjCmZ/hand.avif",
+  hat: "https://i.postimg.cc/63Lw2yvD/hat.jpg",
+  house: "https://i.postimg.cc/6qWKdtVd/house.avif",
+  jacket: "https://i.postimg.cc/DwH7tVh6/jacket.jpg",
+  jellyfish: "https://i.postimg.cc/T3FTZ8Gf/jellyfish.jpg",
+  kitchen: "https://i.postimg.cc/K8wmdXbP/kitchen.jpg",
+  kite: "https://i.postimg.cc/3N8hgYjF/kite.jpg",
+  lizard: "https://i.postimg.cc/13f9CmkK/lizard.webp",
+  milk: "https://i.postimg.cc/4yfGzsvK/milk.jpg",
+  mountain: "https://i.postimg.cc/26frS4VV/mountain.webp",
+  pear: "https://i.postimg.cc/T1dxrfjw/pear.jpg",
+  pen: "https://i.postimg.cc/Hn6gzR34/pen.webp",
+  pencil: "https://i.postimg.cc/ydzs8FkQ/pencil.webp",
+  penguin: "https://i.postimg.cc/L8wmrdRH/penguin.webp",
+  pizza: "https://i.postimg.cc/2SVzcks0/pizza.jpg",
+  rat: "https://i.postimg.cc/v8hbGxMS/rat.jpg",
+  robot: "https://i.postimg.cc/132yLxSj/robot.jpg",
+  rubber: "https://i.postimg.cc/wvdgjh7F/rubber.jpg",
+  ruler: "https://i.postimg.cc/QtrhdpHq/ruler.webp",
+  sandcastle: "https://i.postimg.cc/K8wmdXFy/sandcastle.jpg",
+  sandwich: "https://i.postimg.cc/YSFt7Xqp/sandwich.jpg",
+  sausage: "https://i.postimg.cc/Nj5gJs3K/sausage.webp",
+  shoes: "https://i.postimg.cc/DZdFJ8Gw/shoes.webp",
+  shorts: "https://i.postimg.cc/qvzkbJPX/shorts.jpg",
+  skeleton: "https://i.postimg.cc/sgq3tFyC/skeleton.jpg",
+  socks: "https://i.postimg.cc/26FmbVWR/socks.webp",
+  spider: "https://i.postimg.cc/J4Tr5D2s/spider.avif",
+  stairs: "https://i.postimg.cc/13f9Cmkq/stairs.webp",
+  sun: "https://i.postimg.cc/wvdgjh74/sun.avif",
+  sweater: "https://i.postimg.cc/qRd4v8z2/sweater.avif",
+  tiger: "https://i.postimg.cc/6pgBDsKY/tiger.webp",
+  train: "https://i.postimg.cc/J0pLxvKH/train.jpg",
+  trousers: "https://i.postimg.cc/FRQNHj7L/trousers.avif",
+  umbrella: "https://i.postimg.cc/0QqPypbG/umbrella.webp"
+};
+
+function renderArt(id) {
+  const url = IMAGE_MAP[id];
+  if (url) {
+    return `<img src="${url}" alt="${id}" class="game-vocab-img" draggable="false" />`;
+  }
+  return `<div style="font-size:40px;">📦</div>`;
+}
+
+/* =====================================================================
+   DATASET: EXACTLY 60 DISTINCT SUPER MINDS VOCABULARY ITEMS (5:3:2 RATIO)
+===================================================================== */
+const EASY_WORDS = [
+  'cat', 'dog', 'duck', 'rat', 'frog',
+  'pen', 'book', 'desk', 'bag', 'ball',
+  'car', 'bike', 'kite', 'train', 'doll',
+  'apple', 'banana', 'cake', 'milk', 'pear',
+  'house', 'shoes', 'cap', 'socks', 'hat',
+  'hand', 'foot', 'fish', 'boat', 'sun'
+];
+
+const INTERMEDIATE_WORDS = [
+  'rubber', 'pencil', 'ruler', 'lizard', 'spider',
+  'pizza', 'sausage', 'carrot', 'chicken', 'cheese',
+  'bedroom', 'kitchen', 'stairs', 'tiger', 'camel',
+  'jacket', 'shorts', 'robot'
+];
+
+const HARD_WORDS = [
+  'cellar', 'skeleton', 'sandcastle', 'jellyfish', 'penguin',
+  'broccoli', 'trousers', 'sweater', 'sandwich', 'elephant',
+  'mountain', 'umbrella'
+];
+
+/* =====================================================================
+   ROSTER: KELAS 2M (22 STUDENTS)
+===================================================================== */
+const ROSTER_2M = [
+  "GAN JUN YU", "GAN YU HAN", "JASPER SIM JIA RUI", "JAYDEN NGOH MING ZE",
+  "JOEY YAP ZI XUAN", "KERK JIN XUAN", "KO WEI HONG", "LIM KUN SENG",
+  "LOK KE HAN", "MEOR MUHAMMAD MALEEQ BIN MEOR MUHAMMAD SYAHIR", "MOK QI FEI",
+  "MUHAMMAD ZAFRAN BIN MOHD JUNAIDI", "NG ZHI XIN", "NUR ALYA AFINA BT. AZMI",
+  "NUR AYESHA FATHINAH BT. KAHA FIRDAUS", "SRI NURMALAIQA JELITA BT. MOHD ISA",
+  "TAN JIN KHAI", "THANIYA SHREE A/P SUBASTHARSAN", "THOR ZHEN SHUN",
+  "TOH PIN HOE", "TOW MEI YI", "YASVITHA A/P MAGESVARAN"
+];
+
+/* =====================================================================
+   UK ENGLISH SPEECH & MOBILE AUDIO CONTEXT UNLOCK
+===================================================================== */
+let ukVoiceReference = null;
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+function initializeUKVoices() {
+  if (!window.speechSynthesis) return;
+  const voices = window.speechSynthesis.getVoices();
+  ukVoiceReference = voices.find(v => v.lang === 'en-GB' || v.lang === 'en_GB')
+                  || voices.find(v => v.name.includes('United Kingdom') || v.name.includes('British') || v.name.includes('UK English'))
+                  || null;
+}
+
+if (typeof window !== 'undefined' && window.speechSynthesis) {
+  window.speechSynthesis.onvoiceschanged = initializeUKVoices;
+  initializeUKVoices();
+}
+
+function unlockMobileAudio() {
+  if (audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
+  initializeUKVoices();
+}
+
+function speakWordUK(text) {
+  if (!window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = 'en-GB';
+  utterance.rate = 0.85;
+  utterance.pitch = 1.0;
+
+  if (!ukVoiceReference) initializeUKVoices();
+  if (ukVoiceReference) {
+    utterance.voice = ukVoiceReference;
+  }
+  window.speechSynthesis.speak(utterance);
+}
+
+/* =====================================================================
+   STATE & EXACT 60-QUESTION BALANCED QUEUE (15 PER STAGE)
+===================================================================== */
+const STAGE_TITLES = [
+  "Stage A",
+  "Stage B",
+  "Stage C",
+  "Stage D"
+];
+
+let sessionStartTimestamp = null;
+let sessionEndTimestamp = null;
+
+let mainQuestionQueue = [];
+let currentQueueIndex = 0;
+let missedQuestionQueue = [];
+let isReviewPhase = false;
+let reviewPhaseTotal = 0;
+let reviewPhaseCorrect = 0;
+
+let activeQuestion = null;
+let activeOptions = [];
+let activeSlots = [];
+
+let scoreCorrect = 0;
+let scoreTotal = 0;
+
+let isHighMyopiaActive = false;
+
+function toggleHighMyopia() {
+  isHighMyopiaActive = !isHighMyopiaActive;
+  document.body.classList.toggle('high-myopia-mode', isHighMyopiaActive);
+  document.getElementById('btn-toggle-myopia').innerText = isHighMyopiaActive ? '👁️ Myopia: ON' : '👁️ Myopia';
+}
+
+function buildBalancedCurriculum60() {
+  const easy = [...EASY_WORDS].sort(() => 0.5 - Math.random());
+  const inter = [...INTERMEDIATE_WORDS].sort(() => 0.5 - Math.random());
+  const hard = [...HARD_WORDS].sort(() => 0.5 - Math.random());
+
+  mainQuestionQueue = [];
+
+  // Stage A: 15 questions (8 Easy, 4 Inter, 3 Hard)
+  const stageA = [...easy.splice(0, 8), ...inter.splice(0, 4), ...hard.splice(0, 3)].sort(() => 0.5 - Math.random());
+  stageA.forEach(w => mainQuestionQueue.push({ stage: 0, word: w }));
+
+  // Stage B: 15 questions (8 Easy, 4 Inter, 3 Hard)
+  const stageB = [...easy.splice(0, 8), ...inter.splice(0, 4), ...hard.splice(0, 3)].sort(() => 0.5 - Math.random());
+  stageB.forEach(w => mainQuestionQueue.push({ stage: 1, word: w }));
+
+  // Stage C: 15 questions (7 Easy, 5 Inter, 3 Hard)
+  const stageC = [...easy.splice(0, 7), ...inter.splice(0, 5), ...hard.splice(0, 3)].sort(() => 0.5 - Math.random());
+  stageC.forEach(w => mainQuestionQueue.push({ stage: 2, word: w }));
+
+  // Stage D: 15 questions (7 Easy, 5 Inter, 3 Hard)
+  const stageD = [...easy.splice(0, 7), ...inter.splice(0, 5), ...hard.splice(0, 3)].sort(() => 0.5 - Math.random());
+  stageD.forEach(w => mainQuestionQueue.push({ stage: 3, word: w }));
+
+  currentQueueIndex = 0;
+  missedQuestionQueue = [];
+  isReviewPhase = false;
+}
+
+/* =====================================================================
+   AUDIO REPLAY CONTROLLER (ACTIVE ONLY IN STAGE A)
+===================================================================== */
+function triggerAudioReplay() {
+  unlockMobileAudio();
+  if (!activeQuestion) return;
+
+  if (activeQuestion.stage === 0) {
+    const centerPill = document.getElementById('center-pill');
+    if (centerPill) {
+      centerPill.style.transform = "translate(-50%, -50%) scale(1.1)";
+      setTimeout(() => {
+        centerPill.style.transform = "translate(-50%, -50%) scale(1)";
+      }, 180);
+    }
+    speakWordUK(activeQuestion.word);
+  }
+}
+
+/* =====================================================================
+   GAME LOOP & ASSET PRELOADER
+===================================================================== */
+function initGame() {
+  sessionStartTimestamp = new Date();
+  buildBalancedCurriculum60();
+  
+  preloadAllImages().then(() => {
+    document.getElementById('preloader').style.opacity = '0';
+    setTimeout(() => {
+      document.getElementById('preloader').style.display = 'none';
+      loadCurrentQuestion();
+    }, 350);
+  });
+}
+
+function preloadAllImages() {
+  const urls = Object.values(IMAGE_MAP);
+  let loaded = 0;
+  return new Promise((resolve) => {
+    if (urls.length === 0) return resolve();
+    urls.forEach(url => {
+      const img = new Image();
+      img.onload = img.onerror = () => {
+        loaded++;
+        if (loaded >= urls.length) resolve();
+      };
+      img.src = url;
+    });
+    setTimeout(resolve, 4500);
+  });
+}
+
+function loadCurrentQuestion() {
+  updateProgressHUD();
+
+  if (!isReviewPhase && currentQueueIndex >= mainQuestionQueue.length) {
+    if (missedQuestionQueue.length > 0) {
+      isReviewPhase = true;
+      mainQuestionQueue = [...missedQuestionQueue];
+      currentQueueIndex = 0;
+      reviewPhaseTotal = mainQuestionQueue.length;
+      reviewPhaseCorrect = 0;
+      missedQuestionQueue = [];
+    } else {
+      finishAllStages();
+      return;
+    }
+  } else if (isReviewPhase && currentQueueIndex >= mainQuestionQueue.length) {
+    const scoreRatio = reviewPhaseTotal > 0 ? (reviewPhaseCorrect / reviewPhaseTotal) : 1;
+    if (scoreRatio >= 0.5 && missedQuestionQueue.length === 0) {
+      finishAllStages();
+      return;
+    } else {
+      mainQuestionQueue = [...missedQuestionQueue];
+      currentQueueIndex = 0;
+      reviewPhaseTotal = mainQuestionQueue.length;
+      reviewPhaseCorrect = 0;
+      missedQuestionQueue = [];
+    }
+  }
+
+  activeQuestion = mainQuestionQueue[currentQueueIndex];
+  
+  document.getElementById('hud-stage-label').innerText = isReviewPhase
+    ? `Review ${currentQueueIndex + 1}/${mainQuestionQueue.length}`
+    : STAGE_TITLES[activeQuestion.stage];
+
+  if (activeQuestion.stage === 0) setupStageA();
+  else if (activeQuestion.stage === 1) setupStageB();
+  else if (activeQuestion.stage === 2) setupStageC();
+  else if (activeQuestion.stage === 3) setupStageD();
+}
+
+function advanceQuestion(isCorrect) {
+  scoreTotal++;
+  if (isCorrect) {
+    scoreCorrect++;
+    showStamp('correct');
+    playTone('good');
+    if (isReviewPhase) reviewPhaseCorrect++;
+  } else {
+    showStamp('wrong');
+    playTone('bad');
+    missedQuestionQueue.push(mainQuestionQueue[currentQueueIndex]);
+  }
+
+  updateScoreHUD();
+  currentQueueIndex++;
+  setTimeout(loadCurrentQuestion, 550);
+}
+
+/* --- STAGE A: LISTENING --- */
+function setupStageA() {
+  displayScreen('quad-screen');
+  const allVocab = [...EASY_WORDS, ...INTERMEDIATE_WORDS, ...HARD_WORDS];
+  const distractors = allVocab.filter(w => w !== activeQuestion.word).sort(() => 0.5 - Math.random()).slice(0, 3);
+  activeOptions = [activeQuestion.word, ...distractors].sort(() => 0.5 - Math.random());
+
+  for (let i = 0; i < 4; i++) {
+    document.getElementById(`quad-box-${i}`).innerHTML = renderArt(activeOptions[i]);
+  }
+
+  const pill = document.getElementById('center-pill');
+  pill.className = "pill-pulse-anim is-clickable";
+  pill.innerHTML = `<span>🔊</span> <span>Listen...</span>`;
+
+  speakWordUK(activeQuestion.word);
+}
+
+/* --- STAGE B: PICTURE & WORD (SILENT) --- */
+function setupStageB() {
+  displayScreen('quad-screen');
+  const allVocab = [...EASY_WORDS, ...INTERMEDIATE_WORDS, ...HARD_WORDS];
+  const distractors = allVocab.filter(w => w !== activeQuestion.word).sort(() => 0.5 - Math.random()).slice(0, 3);
+  activeOptions = [activeQuestion.word, ...distractors].sort(() => 0.5 - Math.random());
+
+  for (let i = 0; i < 4; i++) {
+    document.getElementById(`quad-box-${i}`).innerHTML = renderArt(activeOptions[i]);
+  }
+
+  const pill = document.getElementById('center-pill');
+  pill.className = "is-static";
+  pill.innerHTML = `<span>${activeQuestion.word}</span>`;
+}
+
+function onQuadrantChosen(idx) {
+  advanceQuestion(activeOptions[idx] === activeQuestion.word);
+}
+
+/* --- STAGE C: SPELL-IT-RIGHT --- */
+function setupStageC() {
+  displayScreen('scramble-screen');
+  document.getElementById('scramble-art-box').innerHTML = renderArt(activeQuestion.word);
+
+  const letters = activeQuestion.word.split('');
+  activeSlots = new Array(letters.length).fill(null);
+
+  const slotRow = document.getElementById('scramble-slots-row');
+  slotRow.innerHTML = '';
+  letters.forEach((_, i) => {
+    const s = document.createElement('div');
+    s.className = 'slot-circle';
+    s.id = `slot-${i}`;
+    s.innerText = '•';
+    s.onclick = () => onSlotReverted(i);
+    slotRow.appendChild(s);
+  });
+
+  const scrambled = [...letters].sort(() => 0.5 - Math.random());
+  const bubbleWrap = document.getElementById('scramble-bubbles-row');
+  bubbleWrap.innerHTML = '';
+  scrambled.forEach((char, bIdx) => {
+    const b = document.createElement('div');
+    b.className = 'bubble-btn';
+    b.id = `bubble-${bIdx}`;
+    b.innerText = char;
+    b.onclick = () => onBubbleTapped(char, bIdx);
+    bubbleWrap.appendChild(b);
+  });
+}
+
+function onBubbleTapped(char, bIdx) {
+  const emptyPos = activeSlots.indexOf(null);
+  if (emptyPos === -1) return;
+
+  playTone('pop');
+  activeSlots[emptyPos] = { char, bIdx };
+  document.getElementById(`slot-${emptyPos}`).innerText = char;
+  document.getElementById(`bubble-${bIdx}`).classList.add('used');
+
+  if (!activeSlots.includes(null)) {
+    const spelled = activeSlots.map(s => s.char).join('');
+    const isRight = (spelled === activeQuestion.word);
+    if (isRight) {
+      speakWordUK(activeQuestion.word);
+    }
+    advanceQuestion(isRight);
+  }
+}
+
+function onSlotReverted(slotIdx) {
+  const item = activeSlots[slotIdx];
+  if (!item) return;
+  playTone('pop');
+  document.getElementById(`bubble-${item.bIdx}`).classList.remove('used');
+  activeSlots[slotIdx] = null;
+  document.getElementById(`slot-${slotIdx}`).innerText = '•';
+}
+
+/* --- STAGE D: WORD SELECTION BASED ON PICTURE --- */
+function setupStageD() {
+  displayScreen('choice-screen');
+  document.getElementById('choice-art-box').innerHTML = renderArt(activeQuestion.word);
+
+  const allVocab = [...EASY_WORDS, ...INTERMEDIATE_WORDS, ...HARD_WORDS];
+  const distractors = allVocab.filter(w => w !== activeQuestion.word).sort(() => 0.5 - Math.random()).slice(0, 3);
+  const options = [activeQuestion.word, ...distractors].sort(() => 0.5 - Math.random());
+
+  const container = document.getElementById('choice-options-box');
+  container.innerHTML = '';
+  options.forEach(optWord => {
+    const btn = document.createElement('button');
+    btn.className = 'stacked-word-btn';
+    btn.innerText = optWord;
+    btn.onclick = () => {
+      advanceQuestion(optWord === activeQuestion.word);
+    };
+    container.appendChild(btn);
+  });
+}
+
+function displayScreen(id) {
+  document.getElementById('quad-screen').style.display = 'none';
+  document.getElementById('scramble-screen').style.display = 'none';
+  document.getElementById('choice-screen').style.display = 'none';
+  document.getElementById(id).style.display = (id === 'quad-screen') ? 'grid' : 'flex';
+}
+
+/* =====================================================================
+   AUDIO FX & UI HELPERS
+===================================================================== */
+function playTone(type) {
+  try {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    const t = audioCtx.currentTime;
+
+    if (type === 'good') {
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(523, t);
+      osc.frequency.setValueAtTime(659, t + 0.1);
+      gain.gain.setValueAtTime(0.2, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+      osc.start(t); osc.stop(t + 0.35);
+    } else if (type === 'bad') {
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(170, t);
+      osc.frequency.setValueAtTime(130, t + 0.15);
+      gain.gain.setValueAtTime(0.18, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
+      osc.start(t); osc.stop(t + 0.3);
+    } else if (type === 'pop') {
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(440, t);
+      gain.gain.setValueAtTime(0.1, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
+      osc.start(t); osc.stop(t + 0.08);
+    }
+  } catch(e) {}
+}
+
+function showStamp(type) {
+  const el = document.getElementById(type === 'correct' ? 'stamp-correct' : 'stamp-wrong');
+  el.classList.add('stamp-active');
+  setTimeout(() => el.classList.remove('stamp-active'), 450);
+}
+
+function updateProgressHUD() {
+  const total = mainQuestionQueue.length;
+  const pct = total === 0 ? 0 : Math.min(100, Math.round((currentQueueIndex / total) * 100));
+  document.getElementById('hud-progress-bar').style.width = `${pct}%`;
+  document.getElementById('hud-progress-pct').innerText = `${pct}%`;
+}
+
+function updateScoreHUD() {
+  document.getElementById('hud-score').innerText = `${scoreCorrect}/${scoreTotal}`;
+}
+
+/* =====================================================================
+   FAST-TRACK AUTHENTICATION
+===================================================================== */
+function openPasscodeModal() {
+  document.getElementById('passcode-input').value = '';
+  showModal('passcode-modal');
+}
+
+function verifyPasscode() {
+  const code = document.getElementById('passcode-input').value.trim();
+  if (code === "Yes!Sir@2026") {
+    hideModal('passcode-modal');
+    finishAllStages();
+  } else {
+    alert("Access Denied: Incorrect passcode.");
+  }
+}
+
+/* =====================================================================
+   CERTIFICATE & LIVE MALAYSIA DURATION CALCULATION
+===================================================================== */
+function finishAllStages() {
+  sessionEndTimestamp = new Date();
+  const grid = document.getElementById('roster-grid');
+  grid.innerHTML = '';
+
+  ROSTER_2M.forEach((student, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'roster-btn';
+    btn.innerText = `${i + 1}. ${student}`;
+    btn.onclick = () => generateStudentCert(student);
+    grid.appendChild(btn);
+  });
+
+  showModal('roster-modal');
+}
+
+function generateStudentCert(studentName) {
+  hideModal('roster-modal');
+
+  if (!sessionEndTimestamp) sessionEndTimestamp = new Date();
+
+  const tz = 'Asia/Kuala_Lumpur';
+
+  const dateStr = new Intl.DateTimeFormat('en-GB', {
+    timeZone: tz,
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  }).format(sessionEndTimestamp);
+
+  const startStr = new Intl.DateTimeFormat('en-GB', {
+    timeZone: tz,
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: true
+  }).format(sessionStartTimestamp) + ' MYT';
+
+  const endStr = new Intl.DateTimeFormat('en-GB', {
+    timeZone: tz,
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: true
+  }).format(sessionEndTimestamp) + ' MYT';
+
+  const diffMs = Math.max(0, sessionEndTimestamp - sessionStartTimestamp);
+  const diffSecTotal = Math.floor(diffMs / 1000);
+  const mins = Math.floor(diffSecTotal / 60);
+  const secs = diffSecTotal % 60;
+  const durationStr = `${mins}m ${secs}s`;
+
+  document.getElementById('cert-student-name').innerText = studentName;
+  document.getElementById('cert-date-val').innerText = dateStr;
+  document.getElementById('cert-start-val').innerText = startStr;
+  document.getElementById('cert-end-val').innerText = endStr;
+  document.getElementById('cert-duration-val').innerText = durationStr;
+
+  showModal('cert-modal');
+  playTone('good');
+
+  setTimeout(downloadCertificatePDF, 800);
+}
+
+function downloadCertificatePDF() {
+  const element = document.getElementById('printable-certificate');
+  const name = document.getElementById('cert-student-name').innerText.trim().replace(/\s+/g, '_');
+
+  const opt = {
+    margin: [6, 6, 6, 6],
+    filename: `SJKC_Nan_Hwa_Certificate_${name}.pdf`,
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2, useCORS: true },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+  };
+
+  html2pdf().set(opt).from(element).save();
+}
+
+function showModal(id) { document.getElementById(id).style.display = 'flex'; }
+function hideModal(id) { document.getElementById(id).style.display = 'none'; }
+
+window.addEventListener('DOMContentLoaded', initGame);
+</script>
+</body>
+</html>
